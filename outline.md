@@ -8,25 +8,27 @@
 - What is a redistricting plan?
 	- look at a map in Dave's
 	- let's make our own: shapefiles, projections (Amos tweets)
-	- geom_sf()
+	- Rmd: reading in shapefiles, mapping, geom_sf(), etc.
 	- geographies: precincts, VTDs, districts, Census geographies, etc.
 - What is a "fair" plan?
 	- Requirements: laws and norms, state constitutions, guidelines, VRA, etc.
-	- Evaluation statistics
+	- Rmd: Evaluation statistics
 
 # 2. Simulations
 - Adjacency graphs, spanning trees, etc.
-	- contiguity
+	- Rmd: contiguity
 	- what even is a split? different ways of thinking about this
-- redist_map()
+- Intro to redist:
+ 	- Rmd: redist_map()
 	- geometry and adjacency combination
 - What even is sampling / simulation?
 	- different ways of doing the same thing.
  	- some names: MCMC, SMC, etc.
 - Our first simulation
-	- plans matrix
-	- comparing enacted to simulated
-- What is a good sample?
-	- diversity, weights, etc.
-- How to incorporate requirements
-	- constraints: splits, Gibbs & VRA, state quirks, etc.
+	- Rmd: Simulation workflow
+		- plans matrix
+		- comparing enacted to simulated
+	- What is a good sample?
+		- diversity, weights, etc.
+	- How to incorporate requirements
+		- constraints: splits, Gibbs & VRA, state quirks, etc.
