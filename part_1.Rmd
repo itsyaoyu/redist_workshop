@@ -1,0 +1,172 @@
+---
+title: 'Part 1: How Do We Evaluate a Plan?'
+author: "Tyler Simko"
+date: "3/11/2022"
+output: html_document
+---
+
+## 1. Mapping
+
+Firt, we load some packages. `tidyverse` is helpful for general data manipulation, while `sf` will give us access to some powerful mapping tools.
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(sf)
+library(redist)
+library(ggredist)
+library(geomander)
+sf::sf_use_s2(FALSE) 
+```
+
+We can use `st_read()` to read in the shapefile (.shp) of the 2022 New Jersey plan. I downloaded this shapefile from [Dave's Redistricting](https://davesredistricting.org/maps#viewmap::6ff0b024-2e5d-4e9b-ba0e-56f6de17ea80).
+
+```{r}
+nj <- st_read("data/district-shapes/nj_2022.shp")
+```
+
+Let's take a look at this data. In particular, take a look at the `geometry` column, which you may have never seen in an R object before. This column contains the geographic information for each district.
+
+```{r}
+nj
+
+class(nj)
+head(nj)
+
+nj$geometry
+class(nj$geometry)
+```
+
+We can use`redist.plot.map()` to make a simple plot. Since we have an `sf` column, the function knows how to reach the geographic information:
+
+```{r}
+# Underneath, this is just a ggplot() if you are familiar with those!
+redist.plot.map(nj)
+```
+
+We can use the `plan` argument to color by district:
+
+```{r}
+redist.plot.map(nj, plan = id)
+```
+
+`zoom_to` takes a logical vector which lets you zoom the map onto a certain area:
+
+```{r}
+redist.plot.map(nj, plan = id, zoom_to = (id == 6))
+```
+
+Instead of plans, you can also color by values in your data frame with the `fill` argument. There are built-in color scales you can use too, like those for partisanship:
+
+```{r}
+redist.plot.map(nj, fill = DemPct, 
+                boundaries = TRUE,
+                title = "New Jersey 2022 Congressional") + 
+    scale_fill_party_c()
+```
+
+```{r}
+redist.plot.map(nj, fill = DemPct,
+                title = "New Jersey 2022 Congressional", 
+                boundaries = TRUE) + 
+    scale_fill_party_c() + 
+    geom_sf_label(aes(label = id))
+```
+
+## Exercise 1
+
+Let's try downloading your own shapefile and making a map. Go to [this list of official 2020 maps](https://davesredistricting.org/maps#list::Official-Maps) on Dave's Redistricting and open whichever map seems interesting to you.
+
+Look around for a few minutes, then click on the "Export Map" button in the top right (it is an arrow pointing northeast), and choose to export "District Shapes (as Shapefile, .zip)." Save that .zip folder in this folder and unzip it. Finally, read it in and make a nice map. Please ask if you have questions!
+
+## 2. Measurements
+
+A simple evaluation statistic is the number of "competitive" districts based on some criteria. A common metric is looking at districts within 5 or 10% of 50%.
+
+```{r}
+nrow(nj)
+sum(nj$DemPct > 0.45 & nj$DemPct < 0.55)
+sum(nj$DemPct > 0.4 & nj$DemPct < 0.6)
+
+ifelse(nj$DemPct > 0.5 & nj$DemPct < 0.55, 
+       "Lean Dem.", "Not Lean Dem.")
+```
+
+We can also measure the number of districts for which a single minority group is the majority. Such districts are often called **Majority-Minority Districts**:
+
+```{r}
+sum(nj$BlackPct > 0.5)
+sum(nj$Hispanic > 0.5)
+```
+
+**Opportunity Districts** are districts where a majority group is not necessarily above 50%, but still has sufficient electoral power to elect candidates of their choice. 40% is a common cutoff:
+
+```{r}
+sum(nj$BlackPct > 0.4)
+sum(nj$Hispanic > 0.4)
+```
+
+**Coalition Districts** occur when groups of minority voters form the majority:
+
+```{r}
+sum((1 - nj$WhitePct) > 0.5)
+sum(nj$BlackPct + nj$Hispanic > 0.4)
+```
+
+**Compactness**: many states require that districts be "compact." [Few states define](https://redistricting.lls.edu/redistricting-101/where-are-the-lines-drawn/#compactness) what they mean by compactness, but generally it contains the idea that people in a district should live "near" to each other. A circular district would then be more compact than a long, thin district that meanders down a highway.
+
+Polsby-Popper compactness is one measure, given by the following formula, where $A_D$ is the area of the district and $P_D$ is the perimeter of the district:
+
+$$
+P = 4\pi \frac{A_D}{P_D}
+$$
+
+Polsby-Popper scores fall between 0 and 1, with more compact districts being closer to 1.
+
+```{r}
+comp_polsby(nj$id, nj)
+```
+
+[Here](https://fisherzachary.github.io/public/r-output.html) are lots of other ways of measuring compactness.
+
+## 3. Combining geographies
+
+Often, you want to combine multiple geographies. For example, overlaying a shapefile of counties on to new congressional districts.
+
+Let's read a shapefile of voting precincts in New Jersey and figure out which congressional district each of these is assigned to. This data comes from the [2020 Census data](https://github.com/alarm-redist/census-2020) published by the ALARM Project.
+
+```{r}
+nj_vtd <- read_rds("data/nj_vtd.rds")
+nj_cd <- st_read("data/district-shapes/POLYGON.shp")
+
+p <- redist.plot.map(nj, plan = county)
+ggsave('figs/nj_vtds.pdf', p)
+
+colnames(nj)
+
+p <- ggplot(nj_vtd) + 
+    geom_sf(fill = NA, color = "black") + 
+    geom_sf(data = nj_cd, fill = NA, color = "blue")
+ggsave('figs/nj_both.pdf', p)
+```
+
+When dealing with multiple geographies, you want to **make sure they are in the same projection.** In R, we can check that with the `st_crs()` function:
+
+```{r}
+# st_crs = coordinate reference system
+st_crs(nj_vtd)
+st_crs(nj_cd)
+
+nj_vtd <- st_transform(nj_vtd, 4326)
+nj_cd <- st_transform(nj_cd, 4326)
+```
+
+The `geo_match()` function in the `geomander` package will match across these two geographies. From a smaller to a larger geography, the function will tell you which row of the larger geography contains each row of the smaller geography.
+
+```{r}
+districts <- geo_match(nj_vtd, nj_cd)
+
+nj_vtd$cd_2020 <- districts
+
+p <- redist.plot.map(nj_vtd, plan = cd_2020)
+ggsave('figs/nj_2020.pdf', p)
+```
