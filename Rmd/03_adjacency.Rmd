@@ -1,0 +1,138 @@
+---
+title: "Adjacency"
+author: "redist_workshop"
+date: "3/25/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setup
+
+## Libraries
+
+For these exercises, we only need a few packages. We'll use `redist` for a high-level adjacency function and data, `geomander` for some adjacency inspecting tools, and `sf` for lower-level shape tools.
+```{r}
+# library(here)
+library(redist)
+library(geomander)
+library(sf)
+```
+
+## Data
+
+We use the 99 Iowa counties here. In Iowa, congressional districts are drawn without splitting counties. Thus, these 99 counties are partitioned into 4 districts with nearly equal population.
+
+The Iowa data can be loaded from `redist` with:
+
+```{r}
+data('iowa')
+```
+
+# Exercises
+
+## 1. Constructing an adjacency graph
+
+#### a.
+Using `redist.adjacency()`, construct an adjacency graph for the Iowa data. This will be a _0-indexed Rook's adjacency list_.
+
+```{r}
+adj <- redist.adjacency(iowa)
+```
+
+
+#### b.
+The first entry should look like:
+
+```markdown
+[[1]]
+[1]  1 14 38 60 87
+```
+
+Which counties are adjacent to Adair (`iowa$name[1]`) county?
+
+```{r}
+iowa$name[adj[[1]] + 1]
+```
+
+
+#### c.
+
+This adjacency list describes an adjacency graph, which is the collection of nodes (counties) and edges (the connections between nodes). Plot it using `redist.plot.adj()`.
+
+```{r}
+redist.plot.adj(shp = iowa, adj = adj)
+```
+
+#### d. 
+
+How many edges are there in this graph? Recall that our adjacency list is just a symmetric list! (Feel free to skip this question and come back to it if you have time.)
+
+```{r}
+length(unlist(adj)) / 2
+```
+
+## 2. Queen's Contiguity
+
+#### a.
+Now, let's build a new adjacency graph that's Queen's contiguous. For this, we can use `st_touches()` from the `sf` package.
+
+```{r}
+queen <- st_touches(iowa)
+```
+
+#### b. 
+
+The output here is a list, but it is a Sparce Geometry Binary Predicate (sgbp) list! That's fine, because we can treat it as a list anyway. It just prints a bit differently.
+
+However, we do have one issue with this:
+
+```markdown
+1: 2, 5, 15, 25, 39, 61, 88
+```
+It's one indexed! Make it 0 indexed by subtracting 1 from each entry in the list.
+
+```{r}
+queen <- lapply(queen, function(x) x - 1L)
+```
+
+#### c.
+
+Plot our queen's adjacency list using `redist.plot.adj()`.
+
+```{r}
+redist.plot.adj(shp = iowa, adj = queen)
+```
+
+This makes a big difference for a weird state like Iowa, where early planning was aimed to have a county traversable by horse in a day. As a result, you have lots of square small counties which are adjacent to each other only at a single point.
+
+## 3. Comparing Adjacencies
+
+Visually, we saw the difference between the Rook's and Queen's adjacencies above. Let's dive a bit into how they're formally different.
+
+#### a.
+
+Using `geomander::compare_adjacencies()` compare the two.
+
+```{r}
+diffs <- compare_adjacencies(adj, queen, iowa)
+```
+
+#### b.
+
+What are the `relation`s between the differences in the adjacency graphs? This is a formalization of the spatial relationship between the shapes causing the difference.
+
+```{r}
+table(diffs$relation)
+```
+
+
+#### c. 
+
+What are the `class`es between the differences in the adjacency graphs? This is the geographic intersection of the shapes that cause differences.
+
+```{r}
+table(diffs$class)
+```

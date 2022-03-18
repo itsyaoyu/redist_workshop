@@ -1,0 +1,81 @@
+---
+title: "Simulations"
+author: "redist_workshop"
+date: "3/25/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setup
+
+## Libraries
+
+For these exercises, we only need a few packages. We'll use `redist` for a high-level adjacency function and data, `geomander` for some adjacency inspecting tools, and `sf` for lower-level shape tools.
+```{r}
+# library(here)
+library(redist)
+library(geomander)
+library(sf)
+```
+
+## Data
+
+We'll again use the data from NJ, set up for you below for you in just a few lines.
+
+```{r}
+nj <- get_alarm(state = 'NJ')
+nj_cd <-st_read('https://redistricting.lls.edu/wp-content/uploads/nj_2020_congress_2021-12-22_2031-06-30.json')
+nj$cd_2020 <- nj_cd$District[geo_match(from = nj, to = nj_cd)]
+```
+
+# Exercises
+
+## 1.
+
+Create a `redist_map` for NJ. Feel free to borrow from the prior Rmd! This time, set `pop_tol = 0.005`, which allows for a 0.5% population deviation in district size.
+
+```{r}
+map_nj <- redist_map(nj, existing_plan = cd_2020, pop_tol = 0.005)
+```
+
+
+## 2.
+
+The beauty here is that once we have our map, we can immediately try to produce some simulated plans.
+
+#### a.
+Using `redist_smc()`, sample `nsims = 10` plans.
+
+```{r}
+set.seed(02138)
+```
+
+
+```{r}
+pl <- redist_smc(map_nj, nsims = 10)
+```
+
+#### b.
+
+Take a look at the 10th plan, using `redist.plot.plans()`
+
+```{r}
+redist.plot.plans(plans = pl, draws = 10, shp = map_nj)
+```
+
+#### c.
+
+Again, using `redist.plot.plans()`, plot the enacted map `cd_2020` and the `2`nd sampled plan next to each other. (Hint: This needs only one call to `redist.plot.plans()`.)
+
+```{r}
+redist.plot.plans(plans = pl, draws = c('cd_2020', 2), shp = map_nj)
+```
+
+#### d.
+
+Thinking about how the two plans _look_, does it seem like we're similarly compact? Are there any characteristic differences?
+
+
