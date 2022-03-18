@@ -7,7 +7,7 @@ output: html_document
 
 ## 1. Mapping
 
-Firt, we load some packages. `tidyverse` is helpful for general data manipulation, while `sf` will give us access to some powerful mapping tools.
+First, we load some packages. `tidyverse` is helpful for general data manipulation, while `sf` will give us access to some powerful mapping tools.
 
 ```{r setup, include=FALSE}
 library(tidyverse)
@@ -80,7 +80,7 @@ Look around for a few minutes, then click on the "Export Map" button in the top 
 
 ## 2. Measurements
 
-A simple evaluation statistic is the number of "competitive" districts based on some criteria. A common metric is looking at districts within 5 or 10% of 50%.
+A simple evaluation statistic is the number of "competitive" districts based on some criteria. A common metric is looking at districts within 5 or 10% of 50% partisan vote share.
 
 ```{r}
 nrow(nj)
