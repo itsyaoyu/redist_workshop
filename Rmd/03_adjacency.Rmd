@@ -117,7 +117,8 @@ Visually, we saw the difference between the Rook's and Queen's adjacencies above
 Using `geomander::compare_adjacencies()` compare the two.
 
 ```{r}
-diffs <- compare_adjacencies(adj, queen, iowa)
+diffs <- compare_adjacencies(adj1 = adj, adj2 = queen, shp = iowa)
+diffs
 ```
 
 #### b.
