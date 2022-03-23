@@ -1,6 +1,6 @@
 ---
 title: 'Part 1: How Do We Evaluate a Plan?'
-author: "Tyler Simko"
+author: "redist_workshop"
 date: "3/11/2022"
 output: html_document
 ---
