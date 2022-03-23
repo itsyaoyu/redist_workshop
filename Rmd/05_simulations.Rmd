@@ -39,7 +39,7 @@ nj$cd_2020 <- nj_cd$District[geo_match(from = nj, to = nj_cd)]
 Create a `redist_map` for NJ. Feel free to borrow from the prior Rmd! This time, set `pop_tol = 0.005`, which allows for a 0.5% population deviation in district size.
 
 ```{r}
-map_nj <- redist_map(nj, existing_plan = cd_2020, pop_tol = 0.005)
+
 ```
 
 
@@ -56,7 +56,7 @@ set.seed(02138)
 
 
 ```{r}
-pl <- redist_smc(map_nj, nsims = 10)
+
 ```
 
 #### b.
@@ -64,7 +64,7 @@ pl <- redist_smc(map_nj, nsims = 10)
 Take a look at the 10th plan, using `redist.plot.plans()`
 
 ```{r}
-redist.plot.plans(plans = pl, draws = 10, shp = map_nj)
+
 ```
 
 #### c.
@@ -72,7 +72,7 @@ redist.plot.plans(plans = pl, draws = 10, shp = map_nj)
 Again, using `redist.plot.plans()`, plot the enacted map `cd_2020` and the `2`nd sampled plan next to each other. (Hint: This needs only one call to `redist.plot.plans()`.)
 
 ```{r}
-redist.plot.plans(plans = pl, draws = c('cd_2020', 2), shp = map_nj)
+
 ```
 
 #### d.
@@ -94,7 +94,7 @@ set.seed(02138)
 
 
 ```{r}
-pl <- redist_smc(map_nj, nsims = 100, counties = county)
+
 ```
 #### b. 
 
@@ -103,8 +103,7 @@ The counties constraint was a hard constraint which limits the total number of c
 Using `redistmetrics::splits_admin()`, find the number of county splits for each plan.
 
 ```{r}
-pl <- pl %>% 
-    mutate(splits = redistmetrics::splits_admin(plans = ., shp = map_nj, admin = county))
+
 ```
 
 
@@ -113,7 +112,7 @@ pl <- pl %>%
 `redist` includes a nice histogram function for `redist_plans` objects, `hist()`. Plot the number of splits using `hist()`.
 
 ```{r}
-hist(pl, splits)
+
 ```
 
 
@@ -142,11 +141,7 @@ map_nj <- map_nj %>% left_join(baf)
 With this, we can add a Gibbs constraint to the simulation process using `redist_constr()`. We want to constrain the MCD splits using `add_constr_splits()`. Set a strength of 0.5.
 
 ```{r}
-cons <- redist_constr(map_nj) %>% 
-    add_constr_splits(
-        strength = 0.5,
-        admin = mcd
-    )
+
 ```
 
 
@@ -160,9 +155,7 @@ set.seed(02138)
 
 
 ```{r}
-pl <- redist_smc(
-    map_nj, nsims = 1000, counties = county, constraints = cons
-)
+
 ```
 
 
@@ -177,8 +170,7 @@ With our simulations, let's evaluate the enacted plan.
 First, let's add the county splits as before and plot it.
 
 ```{r}
-pl <- pl %>% 
-    mutate(splits = redistmetrics::splits_admin(plans = ., shp = map_nj, admin = county))
+
 ```
 
 #### b.
@@ -186,8 +178,7 @@ pl <- pl %>%
 Next, let's get the number of MCD splits. We can similarly use `redistmetrics::splits_admin()`
 
 ```{r}
-pl <- pl %>% 
-    mutate(mcd_splits = redistmetrics::splits_admin(plans = ., shp = map_nj, admin = mcd))
+
 ```
 
 #### c.
@@ -200,8 +191,7 @@ Plot the county splits and mcd splits using `hist()`.
 Next, we can get a measure of compactness, the Polsby Popper compactness, using `redistmetrics::comp_polsby()`.
 
 ```{r}
-pl <- pl %>% 
-    mutate(polsby = redistmetrics::comp_polsby(plans = ., shp = map_nj))
+
 ```
 
 #### e.
@@ -209,7 +199,7 @@ pl <- pl %>%
 We can use a new plotting function here, `redist.plot.distr_qtys()`, which will do these scores by ordered district.
 
 ```{r}
-redist.plot.distr_qtys(pl, polsby)
+
 ```
 
 
@@ -219,9 +209,7 @@ redist.plot.distr_qtys(pl, polsby)
 Finally, let's calculate the Democratic vote share for the simulated plans, using the 2016 presidential election, with the function `redistmetrics::part_dvs()`. This means we will set `rvote = pre_16_tru_rep` and `dvote = pre_16_cli_dem`.
 
 ```{r}
-pl <- pl %>% 
-    mutate(dvs = redistmetrics::part_dvs(plans = ., shp = map_nj, 
-                                         rvote = pre_16_tru_rep, dvote = pre_16_cli_dem))
+
 ```
 
 
@@ -230,5 +218,5 @@ pl <- pl %>%
 Plot the `dvs` using `redist.plot.distr_qtys()`.
 
 ```{r}
-redist.plot.distr_qtys(pl, dvs)
+
 ```
