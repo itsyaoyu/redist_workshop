@@ -21,7 +21,7 @@ sf::sf_use_s2(FALSE)
 We can use `st_read()` to read in the shapefile (.shp) of the 2022 New Jersey plan. I downloaded this shapefile from [Dave's Redistricting](https://davesredistricting.org/maps#viewmap::6ff0b024-2e5d-4e9b-ba0e-56f6de17ea80).
 
 ```{r}
-nj <- st_read("data/district-shapes/nj_2022.shp")
+nj <- st_read("../data/district-shapes/nj_2022.shp")
 ```
 
 Let's take a look at this data. In particular, take a look at the `geometry` column, which you may have never seen in an R object before. This column contains the geographic information for each district.
@@ -135,8 +135,8 @@ Often, you want to combine multiple geographies. For example, overlaying a shape
 Let's read a shapefile of voting precincts in New Jersey and figure out which congressional district each of these is assigned to. This data comes from the [2020 Census data](https://github.com/alarm-redist/census-2020) published by the ALARM Project.
 
 ```{r}
-nj_vtd <- read_rds("data/nj_vtd.rds")
-nj_cd <- st_read("data/district-shapes/POLYGON.shp")
+nj_vtd <- read_rds("../data/nj_vtd.rds")
+nj_cd <- st_read("../data/district-shapes/POLYGON.shp")
 
 p <- redist.plot.map(nj, plan = county)
 ggsave('figs/nj_vtds.pdf', p)
