@@ -126,6 +126,14 @@ When dealing with multiple geographies, you want to **make sure they are in the 
 
 The `geo_match()` function in the `geomander` package will match across these two geographies. From a smaller to a larger geography, the function will tell you which row of the larger geography contains each row of the smaller geography.
 
+We can use this to make a column for the 2020 congressional district in the precinct data.
+
+```{r}
+
+```
+
+This is useful for many reasons. For example, now for every precinct you know (1) which county it is in and (2) which district it was assigned to. How could you find out whether the county is split between two districts?
+
 ```{r}
 
 ```
