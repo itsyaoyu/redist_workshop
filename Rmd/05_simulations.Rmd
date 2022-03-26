@@ -39,7 +39,7 @@ nj$cd_2020 <- nj_cd$District[geo_match(from = nj, to = nj_cd)]
 Create a `redist_map` for NJ. Feel free to borrow from the prior Rmd! This time, set `pop_tol = 0.005`, which allows for a 0.5% population deviation in district size.
 
 ```{r}
-
+map_nj <- redist_map(nj, existing_plan = cd_2020, pop_tol = 0.005)
 ```
 
 
@@ -52,6 +52,7 @@ Using `redist_smc()`, sample `nsims = 10` plans.
 
 ```{r}
 set.seed(02138)
+nj_sim_10 <- redist_smc(map_nj, 10)
 ```
 
 
@@ -64,7 +65,7 @@ set.seed(02138)
 Take a look at the 10th plan, using `redist.plot.plans()`
 
 ```{r}
-
+redist.plot.plans(nj_sim_10, 10, map_nj)
 ```
 
 #### c.
@@ -72,7 +73,7 @@ Take a look at the 10th plan, using `redist.plot.plans()`
 Again, using `redist.plot.plans()`, plot the enacted map `cd_2020` and the `2`nd sampled plan next to each other. (Hint: This needs only one call to `redist.plot.plans()`.)
 
 ```{r}
-
+redist.plot.plans(nj_sim_10, c("cd_2020", 2), map_nj)
 ```
 
 #### d.
@@ -90,6 +91,7 @@ Now, using `redist_smc()`, sample `nsims = 100` plans, this time using the count
 
 ```{r}
 set.seed(02138)
+nj_sim_100 <- redist_smc(map_nj, 100, counties = county)
 ```
 
 
@@ -103,7 +105,7 @@ The counties constraint was a hard constraint which limits the total number of c
 Using `redistmetrics::splits_admin()`, find the number of county splits for each plan.
 
 ```{r}
-
+n_splits <- splits_admin(nj_sim_100, map_nj, county)
 ```
 
 
@@ -112,7 +114,7 @@ Using `redistmetrics::splits_admin()`, find the number of county splits for each
 `redist` includes a nice histogram function for `redist_plans` objects, `hist()`. Plot the number of splits using `hist()`.
 
 ```{r}
-
+hist(n_splits)
 ```
 
 
@@ -141,7 +143,7 @@ map_nj <- map_nj %>% left_join(baf)
 With this, we can add a Gibbs constraint to the simulation process using `redist_constr()`. We want to constrain the MCD splits using `add_constr_splits()`. Set a strength of 0.5.
 
 ```{r}
-
+constraints <- add_constr_splits(redist_constr(map_nj), 0.5, county)
 ```
 
 
@@ -151,6 +153,7 @@ Now that we've figured out our constraints, let's make a larger sample. For now,
 
 ```{r}
 set.seed(02138)
+nj_sim_1000 <- redist_smc(map_nj, 100, counties = county, constraints = constraints)
 ```
 
 
@@ -170,7 +173,11 @@ With our simulations, let's evaluate the enacted plan.
 First, let's add the county splits as before and plot it.
 
 ```{r}
+n_splits <- splits_admin(nj_sim_1000, map_nj, county)
+hist(n_splits)
 
+nj_sim_1000 <- nj_sim_1000 %>% 
+    mutate(county_splits = n_splits)
 ```
 
 #### b.
@@ -178,12 +185,19 @@ First, let's add the county splits as before and plot it.
 Next, let's get the number of MCD splits. We can similarly use `redistmetrics::splits_admin()`
 
 ```{r}
+splits_mcd <- splits_admin(nj_sim_1000, map_nj, mcd)
 
+nj_sim_1000 <- nj_sim_1000 %>% 
+    mutate(mcd_splits = splits_mcd)
 ```
 
 #### c.
 
 Plot the county splits and mcd splits using `hist()`.
+
+```{r}
+plot(splits_mcd)
+```
 
 
 #### d.
@@ -191,7 +205,10 @@ Plot the county splits and mcd splits using `hist()`.
 Next, we can get a measure of compactness, the Polsby Popper compactness, using `redistmetrics::comp_polsby()`.
 
 ```{r}
+compactness <- comp_polsby(nj_sim_1000, map_nj)
 
+nj_sim_1000 <- nj_sim_1000 %>% 
+    mutate(polsby_popper = compactness)
 ```
 
 #### e.
@@ -199,7 +216,7 @@ Next, we can get a measure of compactness, the Polsby Popper compactness, using 
 We can use a new plotting function here, `redist.plot.distr_qtys()`, which will do these scores by ordered district.
 
 ```{r}
-
+redist.plot.distr_qtys(nj_sim_1000, qty = polsby_popper)
 ```
 
 
@@ -209,7 +226,10 @@ We can use a new plotting function here, `redist.plot.distr_qtys()`, which will 
 Finally, let's calculate the Democratic vote share for the simulated plans, using the 2016 presidential election, with the function `redistmetrics::part_dvs()`. This means we will set `rvote = pre_16_tru_rep` and `dvote = pre_16_cli_dem`.
 
 ```{r}
+dem_vote_share <- part_dvs(nj_sim_1000, map_nj, pre_16_dem_cli, pre_16_rep_tru)
 
+nj_sim_1000 <-  nj_sim_1000 %>% 
+    mutate(dvs = dem_vote_share)
 ```
 
 
@@ -218,5 +238,5 @@ Finally, let's calculate the Democratic vote share for the simulated plans, usin
 Plot the `dvs` using `redist.plot.distr_qtys()`.
 
 ```{r}
-
+redist.plot.distr_qtys(nj_sim_1000, dvs, color_thresh = 0.5)
 ```

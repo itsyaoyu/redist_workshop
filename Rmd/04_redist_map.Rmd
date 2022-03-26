@@ -57,7 +57,7 @@ nj_cd <-st_read('https://redistricting.lls.edu/wp-content/uploads/nj_2020_congre
 Now, we need to get district numbers from `nj_cd` matched to the VTDs in `nj`. To do this, we can use `geomander::geo_match()`.
 
 ```{r}
-
+nj_match <- geo_match(from = nj, to = nj_cd)
 ```
 
 This gives the numerical match from each VTD to each district.
@@ -68,7 +68,11 @@ This gives the numerical match from each VTD to each district.
 Add the district numbers to the `nj` as a new column called `cd_2020`. Beware, the output of `geo_match()` is in the order of the data, not the actual district numbers.
 
 ```{r}
+unique(nj_cd$District)
 
+
+nj <- nj %>% 
+    mutate(cd_2020 = nj_cd$District[nj_match])
 ```
 
 
@@ -81,7 +85,7 @@ Let's make our first `redist_map` using `nj`!
 Create an object `map_nj` using `redist_map()`. Set the `existing_plan` input as `cd_2020`.
 
 ```{r}
-
+map_nj <- redist_map(nj, existing_plan = cd_2020)
 ```
 
 ```{r}
@@ -94,7 +98,7 @@ Create an object `map_nj` using `redist_map()`. Set the `existing_plan` input as
 What new column(s) were added to `map_nj`?
 
 ```{r}
-
+colnames(map_nj)
 ```
 
 #### c. 
@@ -102,7 +106,7 @@ What new column(s) were added to `map_nj`?
 Look at the new column(s) and describe them.
 
 ```{r}
-
+map_nj$adj[[1]]
 ```
 
 It's a zero-indexed adjacency list!
@@ -120,7 +124,7 @@ Beyond a new column, the object is now a `redist_map`.
 What are the new `attributes()` in `map_nj`? 
 
 ```{r}
-
+attributes(map_nj)
 ```
 
 
@@ -131,7 +135,7 @@ What are the new `attributes()` in `map_nj`?
 
 A nice clean shortcut here is to use `str(attributes(any_R_object))` which will condense the structure into a short overview:
 ```{r}
-
+str(attributes(map_nj))
 ```
 
 
@@ -151,7 +155,8 @@ The last five things here are the new attributes. There's an `ndists` argument, 
 Plot your `redist_map` with `redist.plot.map`. Use the `plan` argument to point to the existing plan. Set `boundaries = FALSE` to help clean up the plot.
 
 ```{r}
-
+p <- redist.plot.map(map_nj, fill = cd_2020, boundaries = FALSE)
+ggsave("nj_2020.pdf")
 ```
 
 
